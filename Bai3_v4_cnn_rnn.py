@@ -31,7 +31,6 @@ from imdb_utils import (
     load_imdb_data,
 )
 
-# Cấu hình siêu tham số tối ưu cho cả CPU lẫn GPU
 SEED = 42
 MAX_VOCAB_SIZE = 25_000
 MIN_FREQ = 2
@@ -147,7 +146,6 @@ class TextCNN(nn.Module):
         self.fc = nn.Linear(num_filters * len(kernel_sizes), 1)
 
     def forward(self, x: torch.Tensor, lengths: torch.Tensor) -> torch.Tensor:
-        # x: (B, L) -> (B, L, E) -> (B, E, L) cho Conv1d
         emb = self.embed_drop(self.embedding(x)).transpose(1, 2)
         pooled = [F.relu(conv(emb)).max(dim=2).values for conv in self.convs]
         cat = torch.cat(pooled, dim=1)
@@ -189,7 +187,6 @@ class BiGRUClassifier(nn.Module):
             emb, lengths.cpu(), batch_first=True, enforce_sorted=False
         )
         _, h_n = self.gru(packed)
-        # h_n[-2]: trạng thái cuối chiều xuôi; h_n[-1]: trạng thái cuối chiều ngược
         doc_repr = torch.cat([h_n[-2], h_n[-1]], dim=1)
         return self.fc(self.dropout(doc_repr)).squeeze(-1)
 

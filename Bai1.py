@@ -1,8 +1,6 @@
 import re
 
 def extract_numbers(text: str) -> list[str]:
-    # \d : khớp với một chữ số (0-9)
-    # +  : lặp lại 1 hoặc nhiều lần (gom các chữ số đứng cạnh nhau thành một số nguyên vẹn)
     pattern = r'\d+'
     return re.findall(pattern, text)
 

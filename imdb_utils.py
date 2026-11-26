@@ -25,14 +25,12 @@ from sklearn.metrics import (
 DATA_URL = "http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
 DEFAULT_DATA_DIR = Path("./data")
 
-# Giữ lại các từ phủ định quan trọng cho bài toán phân tích cảm xúc
 NEGATION_WORDS = {
     "no", "not", "nor", "never", "neither", "none",
     "nothing", "nowhere", "hardly", "barely", "scarcely",
 }
 SENTIMENT_STOPWORDS = set(ENGLISH_STOP_WORDS) - NEGATION_WORDS
 
-# Biên dịch sẵn Regex để tối ưu tốc độ trên 50.000 văn bản
 HTML_TAG_RE = re.compile(r"<[^>]+>")
 URL_RE = re.compile(r"https?://\S+|www\.\S+")
 CONTRACTIONS = [

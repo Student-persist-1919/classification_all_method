@@ -61,19 +61,15 @@ class PureStatisticalNaiveBayes:
             word_counts[label].update(features)
             global_word_counts.update(features)
 
-        # Lọc các từ quá hiếm (nhiễu / lỗi chính tả) để xây dựng bộ từ vựng V
         self.vocab = {w for w, cnt in global_word_counts.items() if cnt >= self.min_freq}
         vocab_size = len(self.vocab)
 
-        # Tính log P(c) và log P(w|c) với làm trơn Laplace
         for c in (0, 1):
             self.log_prior[c] = math.log(doc_counts[c] / total_docs)
 
-            # Tổng số lượt xuất hiện của các từ thuộc V trong lớp c
             total_tokens_in_c = sum(cnt for w, cnt in word_counts[c].items() if w in self.vocab)
             denom = total_tokens_in_c + self.alpha * vocab_size
 
-            # Xác suất cho từ có trong V nhưng không xuất hiện trong lớp c
             self.unseen_in_class_log_prob[c] = math.log(self.alpha / denom)
 
             self.log_likelihood[c] = {
@@ -91,7 +87,7 @@ class PureStatisticalNaiveBayes:
 
         for feat in features:
             if feat not in self.vocab:
-                continue  # Bỏ qua từ ngoài từ vựng (OOV)
+                continue
             scores[0] += self.log_likelihood[0].get(feat, self.unseen_in_class_log_prob[0])
             scores[1] += self.log_likelihood[1].get(feat, self.unseen_in_class_log_prob[1])
 
@@ -144,13 +140,11 @@ def main():
         print(f"Kích thước từ vựng |V|: {len(model.vocab):,} | Tổng thời gian: {elapsed:.2f}s")
         evaluate_predictions(y_test, y_pred, name, raw_texts=X_test, n_errors=3)
 
-        # Chấm thêm trên tập con 200 mẫu cố định để sau này so sánh với LLM API (v5)
         y_sub_pred = model.predict(X_sub)
         sub_metrics = evaluate_predictions(
             y_sub, y_sub_pred, f"{name} [Subset 200 mẫu]", raw_texts=None, n_errors=0
         )
 
-        # In top đặc trưng phân biệt nhất (chỉ in cho bản Unigram + Bigram)
         if use_bigrams:
             top_pos, top_neg = model.get_top_discriminative_features(top_k=10)
             print("\n[3/3] Top 10 đặc trưng nghiêng về TÍCH CỰC nhất (log P(w|pos) - log P(w|neg)):")

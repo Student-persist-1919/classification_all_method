@@ -39,12 +39,12 @@ PROVIDER_DEFAULTS = {
     "groq": {
         "env_var": "GROQ_API_KEY",
         "model": "llama-3.1-8b-instant",
-        "delay": 2.2,  # Free tier Groq ~30 requests/phút -> 2.2s an toàn không bị 429
+        "delay": 2.2,
     },
     "gemini": {
         "env_var": "GEMINI_API_KEY",
         "model": "gemini-2.5-flash",
-        "delay": 4.5,  # Free tier Gemini ~10-15 RPM
+        "delay": 4.5,
     },
     "hf": {
         "env_var": "HF_API_KEY",
@@ -92,7 +92,6 @@ def prepare_llm_text(text: str, max_chars: int = 1500) -> str:
     text = HTML_TAG_RE.sub(" ", text)
     text = WS_RE.sub(" ", text).strip()
     if len(text) > max_chars:
-        # Giữ phần mở đầu và phần kết (nơi người xem thường chốt đánh giá)
         half = max_chars // 2
         text = text[:half] + " ... " + text[-half:]
     return text
@@ -190,12 +189,10 @@ def parse_llm_output(raw_text: str) -> tuple[int | None, bool]:
       - Nếu hoàn toàn không ánh xạ được, trả về (None, False).
     """
     cleaned = raw_text.strip()
-    # Loại bỏ markdown code fence nếu có (```json ... ```)
     if cleaned.startswith("```"):
         cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned, flags=re.IGNORECASE)
         cleaned = re.sub(r"\s*```$", "", cleaned).strip()
 
-    # 1. Thử phân tích JSON chuẩn
     try:
         obj = json.loads(cleaned)
         if isinstance(obj, dict) and "label" in obj:
@@ -207,12 +204,10 @@ def parse_llm_output(raw_text: str) -> tuple[int | None, bool]:
     except json.JSONDecodeError:
         pass
 
-    # 2. Fallback: tìm chuỗi JSON lồng trong đoạn giải thích thừa
     json_match = re.search(r'"label"\s*:\s*"(positive|negative)"', cleaned, flags=re.IGNORECASE)
     if json_match:
         return (1 if json_match.group(1).lower() == "positive" else 0), False
 
-    # 3. Fallback cuối: chỉ khớp khi xuất hiện đúng 1 trong 2 nhãn
     has_pos = bool(re.search(r"\bpositive\b", cleaned, flags=re.IGNORECASE))
     has_neg = bool(re.search(r"\bnegative\b", cleaned, flags=re.IGNORECASE))
     if has_pos and not has_neg:
@@ -237,7 +232,6 @@ def run_llm_mode(
     safe_model = re.sub(r"[^a-zA-Z0-9._-]+", "_", model)
     cache_file = cache_dir / f"llm_cache_{provider}_{safe_model}_{mode}_{len(texts)}.jsonl"
 
-    # Đọc lại kết quả đã lưu (resume nếu lần trước bị ngắt giữa chừng)
     cached: dict[int, dict] = {}
     if cache_file.exists():
         with open(cache_file, "r", encoding="utf-8") as f:
@@ -280,7 +274,6 @@ def run_llm_mode(
             if done < len(texts) and delay > 0:
                 time.sleep(delay)
 
-    # Tổng hợp thống kê theo đúng thứ tự
     records = [cached[i] for i in range(len(texts))]
     latencies = [r["latency_s"] for r in records]
     non_strict_count = sum(1 for r in records if not r["strict_json"])

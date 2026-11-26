@@ -25,7 +25,6 @@ from imdb_utils import (
     load_imdb_data,
 )
 
-# Chuyển set sang list để tương thích mọi phiên bản scikit-learn
 STOPWORDS_LIST = sorted(SENTIMENT_STOPWORDS)
 C_CANDIDATES = [0.2, 0.5, 1.0, 2.0, 5.0]
 
@@ -109,13 +108,11 @@ def main():
     X_train_raw, y_train, X_test_raw, y_test = load_imdb_data()
     X_sub_raw, y_sub = get_stratified_subset(X_test_raw, y_test, n_samples=200, seed=42)
 
-    # Làm sạch 1 lần duy nhất và tái sử dụng cho cả 3 thí nghiệm
     X_train_clean = [clean_text(t, remove_stopwords=False) for t in X_train_raw]
     X_test_clean = [clean_text(t, remove_stopwords=False) for t in X_test_raw]
     X_sub_clean = [clean_text(t, remove_stopwords=False) for t in X_sub_raw]
     print(f"Hoàn tất tiền xử lý 50.000 mẫu trong {time.time() - t_load:.2f}s.")
 
-    # Tách 20% từ tập train làm tập dev để chọn siêu tham số C
     X_tr, X_dev, y_tr, y_dev = train_test_split(
         X_train_clean,
         y_train,
@@ -137,10 +134,8 @@ def main():
     for exp_name, kind in experiments:
         t0 = time.time()
 
-        # Bước A: Tìm C tối ưu trên tập dev
         best_c, dev_f1 = select_best_c(kind, X_tr, y_tr, X_dev, y_dev)
 
-        # Bước B: Huấn luyện lại trên toàn bộ 25.000 mẫu train với C tốt nhất
         vectorizer = make_vectorizer(kind)
         X_train_vec = vectorizer.fit_transform(X_train_clean)
         X_test_vec = vectorizer.transform(X_test_clean)
@@ -154,7 +149,6 @@ def main():
         )
         clf.fit(X_train_vec, y_train)
 
-        # Bước C: Đánh giá trên full test (25.000) và subset (200)
         y_pred = clf.predict(X_test_vec)
         y_sub_pred = clf.predict(X_sub_vec)
 

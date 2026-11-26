@@ -29,7 +29,6 @@ from imdb_utils import (
     load_imdb_data,
 )
 
-# Cấu hình siêu tham số
 SEED = 42
 MAX_FEATURES = 20_000
 BATCH_SIZE = 128
@@ -202,7 +201,6 @@ def main():
     X_test_clean = [clean_text(t, remove_stopwords=False) for t in X_test_raw]
     X_sub_clean = [clean_text(t, remove_stopwords=False) for t in X_sub_raw]
 
-    # Tách 20% tập train làm tập dev cho Early Stopping
     X_tr, X_dev, y_tr, y_dev = train_test_split(
         X_train_clean,
         y_train,
@@ -282,7 +280,6 @@ def main():
 
     print(f"Tổng thời gian huấn luyện: {time.time() - t_train_start:.2f}s")
 
-    # Khôi phục trọng số tốt nhất trên tập dev trước khi chấm trên tập test
     model.load_state_dict(best_state)
 
     print("\n[4/4] Đánh giá mô hình MLP tốt nhất trên tập kiểm thử IMDB...")
